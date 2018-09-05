@@ -23,7 +23,7 @@ You can create a new random seed with keypair (ed25519):
 ```js
 const account = lto.createAccount();
 console.log(account.phrase); // 'satisfy sustain shiver skill betray mother appear pupil coconut weasel firm top puzzle monkey seek'
-console.log(account.sign); // { privateKey: '4iZ5a5Qx2Utd1432omPUsKXifctCnUr25PjYoR7ohLbnXgG6sazdBg2iXbywzuh6VNWPiFPCudSV2du9HxGxT8mV', publicKey: 'EUkmkWG6TRbsZdQ9UjGySTzkMJq9eaKAjwJpW3Wv6DDH' }
+console.log(account.getSignKeys()); // { privateKey: '4iZ5a5Qx2Utd1432omPUsKXifctCnUr25PjYoR7ohLbnXgG6sazdBg2iXbywzuh6VNWPiFPCudSV2du9HxGxT8mV', publicKey: 'EUkmkWG6TRbsZdQ9UjGySTzkMJq9eaKAjwJpW3Wv6DDH' }
 
 ```
 
@@ -37,7 +37,7 @@ const phrase = 'satisfy sustain shiver skill betray mother appear pupil coconut 
 
 const seed = lto.seedFromExistingPhrase(phrase);
 console.log(account.phrase); // 'satisfy sustain shiver skill betray mother appear pupil coconut weasel firm top puzzle monkey seek'
-console.log(account.sign); // { privateKey: '4iZ5a5Qx2Utd1432omPUsKXifctCnUr25PjYoR7ohLbnXgG6sazdBg2iXbywzuh6VNWPiFPCudSV2du9HxGxT8mV', publicKey: 'EUkmkWG6TRbsZdQ9UjGySTzkMJq9eaKAjwJpW3Wv6DDH' }
+console.log(account.getSignKeys()); // { privateKey: '4iZ5a5Qx2Utd1432omPUsKXifctCnUr25PjYoR7ohLbnXgG6sazdBg2iXbywzuh6VNWPiFPCudSV2du9HxGxT8mV', publicKey: 'EUkmkWG6TRbsZdQ9UjGySTzkMJq9eaKAjwJpW3Wv6DDH' }
 
 ```
 
@@ -121,4 +121,79 @@ const request = new Request('http://example.com', 'get', headers);
 
 const httpSign = new HTTPSignature(request, ['(request-target)', 'date']);
 const signatureHeader = httpSign.signWith(account); // keyId="FkU1XyfrCftc4pQKXCrrDyRLSnifX1SMvmx1CYiiyB3Y",algorithm="ed25519-sha256",headers="(request-target) date",signature="tMAxot4iWb8gB4FQ2zqIMfH2Fd8kA9DwSoW3UZPj9f8QlpLX5VvWf314vFnM8MsDo5kqtGzk7XOOy0TL4zVWAg=="
+```
+
+## Public Node API
+
+### Transactions
+
+#### Broadcast
+
+Creating a transaction is done with the `Transaction.broadcast` API. There are serveral transaction types you can create:
+
+##### 1. Transfer
+
+To transfer LTO from one account to another.
+
+```js
+const transaction = {
+  amount: 100000000,
+  fee: 10000,
+  recipient: '3NARPnCPG4egZbFUQENZ6VDojQqMCpGEG9i',
+  attachment: 'foo'
+};
+const res = await lto.API.PublicNode.transactions.broadcast('transfer', transaction, account.getSignKeys());
+/* 
+{
+  "type" : 4,
+  "id" : "GiYdcx3FnTnBMKDxM8DugidxSXSDusJC9rG6BtP8hnCF",
+  "sender" : "3N8jr1ytyyYzCVHd8qcoCU3XTFVs24DmYHs",
+  "senderPublicKey" : "CcVaW8tKGTY7NDaZ7V6b2phuDUea1mb4xraTBTWmjoFa",
+  "fee" : 100000,
+  "timestamp" : 1536147726778,
+  "signature" : "2Nn7zuHvgR9Zb1NRDB8a6sZLufsS7irQk54hErmqVpjzvGrKfhcmasfVLJrFugk5Li7JcD9A6JWdUKtVBqjmr96P",
+  "version" : 1,
+  "recipient" : "3NARPnCPG4egZbFUQENZ6VDojQqMCpGEG9i",
+  "amount" : 100000,
+  "attachment" : "bQbp",
+  "height" : 1337
+}
+*/
+
+```
+
+##### 2. Lease
+
+```js
+const transaction = {
+  amount: 100000000,
+  fee: 10000,
+  recipient: '3NARPnCPG4egZbFUQENZ6VDojQqMCpGEG9i'
+};
+const res = await lto.API.PublicNode.transactions.broadcast('lease', transaction, account.getSignKeys());
+```
+
+##### 3. Cancel Lease
+
+```js
+const transaction = {
+  txId: 'CAQZUgK8bmhvAqWdTV1PUcaLME5KLCUhWC3wcxZopzVc',
+  fee: 10000
+};
+const res = await lto.API.PublicNode.transactions.broadcast('cancelLeasing', transaction, account.getSignKeys());
+```
+
+##### 4. Data
+```js
+const transaction = {
+  fee: 10000,
+  data: [
+    {
+      key: '\u2693',
+      type: 'binary',
+      value: 'base64:' + base64.encode(textBytes)
+    }
+  ]
+};
+const res = await lto.API.PublicNode.transactions.broadcast('data', transaction, account.getSignKeys());
 ```
