@@ -41,11 +41,10 @@ export const preTransfer = (data) => transferSchema.parse(data);
 export const postTransfer = createRemapper({
   transactionType: null,
   attachment: {
-    from: 'bytes',
+    from: 'string',
     to: 'base58'
   },
-  type: constants.TRANSACTION_TYPE_NUMBER.TRANSFER,
-  version: constants.TRANSACTION_TYPE_VERSION.TRANSFER
+  type: constants.TRANSACTION_TYPE_NUMBER.TRANSFER
 });
 
 export const sendTransferTx = wrapTxRequest(TX_TYPE_MAP.transfer, preTransfer, postTransfer,(postParams) => {
@@ -142,7 +141,7 @@ export const preMassTransfer = (data) => massTransferSchema.parse(data);
 export const postMassTransfer = createRemapper({
   transactionType: null,
   attachment: {
-    from: 'bytes',
+    from: 'string',
     to: 'base58'
   },
   type: constants.TRANSACTION_TYPE_NUMBER.MASS_TRANSFER,
